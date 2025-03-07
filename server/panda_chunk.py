@@ -8,7 +8,7 @@ csv_dir = data_dir / 'csv'
 csv_cache_dir = data_dir / 'csv_cache'
 
 
-def read_csv_in_chunks(file_path, chunk_size=10000):
+def write_csv_chunks(file_path, chunk_size=10000):
     file_path = Path(file_path)
     cache_path = csv_cache_dir / file_path.name
     cache_path.mkdir(exist_ok=True)
@@ -25,7 +25,7 @@ def read_csv_in_chunks(file_path, chunk_size=10000):
 def main():
     for file_path in csv_dir.glob('*.csv'):
         print(file_path)
-        read_csv_in_chunks(file_path)
+        write_csv_chunks(file_path)
 
 
 if __name__ == '__main__':
