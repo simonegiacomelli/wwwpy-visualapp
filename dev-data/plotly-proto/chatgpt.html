@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Plotly Time Series Demo</title>
+    <script src="https://cdn.plot.ly/plotly-3.0.0.min.js" charset="utf-8"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #plot {
+            width: 80%;
+            height: 400px;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+
+<button id="left">&larr; Left</button>
+<button id="right">Right &rarr;</button>
+<div id="plot"></div>
+
+<script>
+    var windowSize = 100;
+    var xData = [];
+    var yData = [];
+
+    for (var i = 0; i < windowSize; i++) {
+        xData.push(i);
+        yData.push(Math.sin(i * 0.1));
+    }
+
+    var layout = {
+        xaxis: { range: [xData[0], xData[xData.length - 1]] },
+        yaxis: { title: "Amplitude" },
+        title: "Dynamic Time Series Shift"
+    };
+
+    Plotly.newPlot('plot', [{ x: xData, y: yData, mode: 'lines', name: 'Sinusoid' }], layout);
+
+    document.getElementById('right').addEventListener('click', function () {
+        var newX = xData[xData.length - 1] + 1;
+        var newY = Math.sin(newX * 0.1);
+
+        xData.shift();
+        yData.shift();
+        xData.push(newX);
+        yData.push(newY);
+
+        Plotly.update('plot', { x: [xData], y: [yData] }, { xaxis: { range: [xData[0], xData[xData.length - 1]] } });
+    });
+
+    document.getElementById('left').addEventListener('click', function () {
+        var newX = xData[0] - 1;
+        var newY = Math.sin(newX * 0.1);
+
+        xData.pop();
+        yData.pop();
+        xData.unshift(newX);
+        yData.unshift(newY);
+
+        Plotly.update('plot', { x: [xData], y: [yData] }, { xaxis: { range: [xData[0], xData[xData.length - 1]] } });
+    });
+</script>
+
+</body>
+</html>
