@@ -11,6 +11,7 @@ class TimeSeriesComponent(wpc.Component, tag_name="time-series-plot"):
     plotDiv: js.HTMLDivElement = wpc.element()
 
     def init_component(self):
+        # language=html
         self.element.innerHTML = """
         <div>
             <button data-name="btn_left">&larr; Left</button>
