@@ -23,6 +23,7 @@ class TimeSeriesComponent(wpc.Component, tag_name="time-series-plot"):
         </style>
         """
         self.windowSize = 100
+        self.shift_points = 10
         self.xData = [i for i in range(self.windowSize)]
         self.yData = [math.sin(i * 0.1) for i in range(self.windowSize)]
 
@@ -35,28 +36,28 @@ class TimeSeriesComponent(wpc.Component, tag_name="time-series-plot"):
         }
         inp = [{"x": self.xData, "y": self.yData, "mode": "lines", "name": "Sinusoid"}]
 
-        js.Plotly.newPlot(self.plotDiv,  dict_to_js(inp), dict_to_js(layout))
+        js.Plotly.newPlot(self.plotDiv, dict_to_js(inp), dict_to_js(layout))
 
     async def btn_right__click(self, event):
-        newX = self.xData[-1] + 1
-        newY = math.sin(newX * 0.1)
-        self.xData.pop(0)
-        self.yData.pop(0)
-        self.xData.append(newX)
-        self.yData.append(newY)
+        new_xs = list(range(self.xData[-1] + 1, self.xData[-1] + self.shift_points + 1))
+        new_ys = [math.sin(x * 0.1) for x in new_xs]
+
+        self.xData = self.xData[self.shift_points:] + new_xs
+        self.yData = self.yData[self.shift_points:] + new_ys
+
         layout_update = {"xaxis": {"range": [self.xData[0], self.xData[-1]]}}
         await self._update(layout_update)
 
     async def btn_left__click(self, event):
-        newX = self.xData[0] - 1
-        newY = math.sin(newX * 0.1)
-        self.xData.pop()
-        self.yData.pop()
-        self.xData.insert(0, newX)
-        self.yData.insert(0, newY)
+        new_xs = list(range(self.xData[0] - self.shift_points, self.xData[0]))
+        new_ys = [math.sin(x * 0.1) for x in new_xs]
+
+        self.xData = new_xs + self.xData[:-self.shift_points]
+        self.yData = new_ys + self.yData[:-self.shift_points]
+
         layout_update = {"xaxis": {"range": [self.xData[0], self.xData[-1]]}}
         await self._update(layout_update)
 
     async def _update(self, layout_update):
         data = {"x": [self.xData], "y": [self.yData]}
-        js.Plotly.update(self.plotDiv,  dict_to_js(data),  dict_to_js(layout_update))
+        js.Plotly.update(self.plotDiv, dict_to_js(data), dict_to_js(layout_update))
