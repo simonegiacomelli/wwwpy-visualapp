@@ -5,6 +5,7 @@ import time
 import js
 import wwwpy.remote.component as wpc
 from wwwpy.remote import micropip_install
+from wwwpy.remote.jslib import script_load_once
 
 from server import rpc
 
@@ -40,6 +41,7 @@ class Component1(wpc.Component, tag_name='component-1'):
         self._inp_chunk.value = '0'
 
     async def after_init_component(self):
+        await script_load_once('https://cdn.plot.ly/plotly-3.0.0.min.js', charset='utf-8')
         await self._load_csv_options()
         await micropip_install('pandas')
         await micropip_install('fastparquet')
@@ -54,10 +56,13 @@ class Component1(wpc.Component, tag_name='component-1'):
             text = f'{csv_info.name} ({csv_info.chunk_number} chunks / {csv_info.file_size_human()} total)'
             self._add_option(value, text)
 
-    async def _load_chunk(self):
+    async def _load_chunk(self, chunk_delta: int = 0):
         self.pre1.textContent = 'loading...'
         try:
+
             csv_info = self._get_current_csv_info()
+            if chunk_delta != 0:
+                self._chunk_index_add(chunk_delta, csv_info.chunk_number)
             logger.debug(f'csv_info: {csv_info}')
             chunk_index = int(self._inp_chunk.value)
             start_time = time.perf_counter_ns()
@@ -94,17 +99,19 @@ class Component1(wpc.Component, tag_name='component-1'):
         self._select_csv.appendChild(option)
 
     async def btn_prev__click(self, event):
-        self._chunk_index_add(-1)
-        await self._load_chunk()
+        await self._load_chunk(-1)
 
     async def btn_next__click(self, event):
-        self._chunk_index_add(1)
-        await self._load_chunk()
+        await self._load_chunk(1)
 
-    def _chunk_index_add(self, delta):
-        self._inp_chunk.value = str(int(self._inp_chunk.value) + delta)
-        if int(self._inp_chunk.value) < 0:
-            self._inp_chunk.value = '0'
+    def _chunk_index_add(self, delta, max_chunk):
+        i = int(self._inp_chunk.value) + delta
+        if i < 0:
+            i = 0
+        if i >= max_chunk:
+            i = max_chunk - 1
+
+        self._inp_chunk.value = str(i )
 
     async def _select_csv__change(self, event):
         await self._load_chunk()
