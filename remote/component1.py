@@ -7,9 +7,11 @@ import wwwpy.remote.component as wpc
 from wwwpy.remote import micropip_install
 from wwwpy.remote.jslib import script_load_once
 
+from remote.time_series_component import TimeSeriesComponent # noqa
 from server import rpc
 
 logger = logging.getLogger(__name__)
+
 
 
 class Component1(wpc.Component, tag_name='component-1'):
@@ -36,9 +38,11 @@ class Component1(wpc.Component, tag_name='component-1'):
 <button data-name="btn_next">next -></button>
 <br>
 <br>
+<time-series-plot></time-series-plot>
 <pre data-name="pre1"></pre>
 """
         self._inp_chunk.value = '0'
+
 
     async def after_init_component(self):
         await script_load_once('https://cdn.plot.ly/plotly-3.0.0.min.js', charset='utf-8')

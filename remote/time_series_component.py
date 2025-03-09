@@ -1,0 +1,62 @@
+import math
+import js
+import wwwpy.remote.component as wpc
+from wwwpy.remote import dict_to_js
+from wwwpy.remote.jslib import script_load_once
+
+
+class TimeSeriesComponent(wpc.Component, tag_name="time-series-plot"):
+    btn_left: js.HTMLButtonElement = wpc.element()
+    btn_right: js.HTMLButtonElement = wpc.element()
+    plotDiv: js.HTMLDivElement = wpc.element()
+
+    def init_component(self):
+        self.element.innerHTML = """
+        <div>
+            <button data-name="btn_left">&larr; Left</button>
+            <button data-name="btn_right">Right &rarr;</button>
+        </div>
+        <div data-name="plotDiv" style="width:80%; height:400px; margin:auto;"></div>
+        <style>
+            body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
+            button { margin: 10px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
+        </style>
+        """
+        self.windowSize = 100
+        self.xData = [i for i in range(self.windowSize)]
+        self.yData = [math.sin(i * 0.1) for i in range(self.windowSize)]
+
+    async def after_init_component(self):
+        await script_load_once("https://cdn.plot.ly/plotly-3.0.0.min.js", charset="utf-8")
+        layout = {
+            "xaxis": {"range": [self.xData[0], self.xData[-1]]},
+            "yaxis": {"title": "Amplitude"},
+            "title": "Dynamic Time Series Shift",
+        }
+        inp = [{"x": self.xData, "y": self.yData, "mode": "lines", "name": "Sinusoid"}]
+
+        js.Plotly.newPlot(self.plotDiv,  dict_to_js(inp), dict_to_js(layout))
+
+    async def btn_right__click(self, event):
+        newX = self.xData[-1] + 1
+        newY = math.sin(newX * 0.1)
+        self.xData.pop(0)
+        self.yData.pop(0)
+        self.xData.append(newX)
+        self.yData.append(newY)
+        layout_update = {"xaxis": {"range": [self.xData[0], self.xData[-1]]}}
+        await self._update(layout_update)
+
+    async def btn_left__click(self, event):
+        newX = self.xData[0] - 1
+        newY = math.sin(newX * 0.1)
+        self.xData.pop()
+        self.yData.pop()
+        self.xData.insert(0, newX)
+        self.yData.insert(0, newY)
+        layout_update = {"xaxis": {"range": [self.xData[0], self.xData[-1]]}}
+        await self._update(layout_update)
+
+    async def _update(self, layout_update):
+        data = {"x": [self.xData], "y": [self.yData]}
+        js.Plotly.update(self.plotDiv,  dict_to_js(data),  dict_to_js(layout_update))
