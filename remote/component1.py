@@ -45,7 +45,6 @@ class Component1(wpc.Component, tag_name='component-1'):
 
 
     async def after_init_component(self):
-        await script_load_once('https://cdn.plot.ly/plotly-3.0.0.min.js', charset='utf-8')
         await self._load_csv_options()
         await micropip_install('pandas')
         await micropip_install('fastparquet')
