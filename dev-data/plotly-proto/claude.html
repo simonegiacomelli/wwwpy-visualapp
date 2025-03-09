@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plotly Time Series Data Shifting Demo</title>
+    <script src="https://cdn.plot.ly/plotly-3.0.0.min.js" charset="utf-8"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .plot {
+            width: 100%;
+            height: 400px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Time Series Data Shifting Demo</h1>
+    <div id="plot" class="plot"></div>
+    <div class="controls">
+        <button id="shift-left">← Shift Left</button>
+        <button id="shift-right">Shift Right →</button>
+    </div>
+</div>
+
+<script>
+    // Initialize data
+    const totalPoints = 100;
+    const initialStep = 0;
+
+    // Create initial data arrays
+    let xData = [];
+    let yData = [];
+
+    // Generate sine wave data
+    function generateSineData(step, count) {
+        const x = [];
+        const y = [];
+
+        for (let i = 0; i < count; i++) {
+            const currentStep = step + i;
+            x.push(currentStep);
+            y.push(Math.sin(currentStep / 10) + Math.sin(currentStep / 20));
+        }
+
+        return { x, y };
+    }
+
+    // Initialize with data
+    let currentStep = initialStep;
+    const initialData = generateSineData(currentStep, totalPoints);
+    xData = initialData.x;
+    yData = initialData.y;
+
+    // Create the plot
+    const trace = {
+        x: xData,
+        y: yData,
+        mode: 'lines',
+        line: {
+            color: 'rgb(55, 128, 191)',
+            width: 2
+        }
+    };
+
+    const layout = {
+        title: 'Dynamic Time Series (Sine Wave)',
+        xaxis: {
+            title: 'Time'
+        },
+        yaxis: {
+            title: 'Value'
+        }
+    };
+
+    Plotly.newPlot('plot', [trace], layout);
+
+    // Function to shift data left (add to right, remove from left)
+    function shiftRight() {
+        currentStep += 10;
+
+        // Generate new data to add to the right
+        const newData = generateSineData(currentStep + totalPoints - 10, 10);
+
+        // Update arrays
+        xData = xData.slice(10).concat(newData.x);
+        yData = yData.slice(10).concat(newData.y);
+
+        // Update the plot
+        Plotly.animate('plot', {
+            data: [{x: xData, y: yData}],
+            traces: [0],
+            layout: {}
+        }, {
+            transition: {
+                duration: 300,
+                easing: 'cubic-in-out'
+            }
+        });
+    }
+
+    // Function to shift data right (add to left, remove from right)
+    function shiftLeft() {
+        currentStep -= 10;
+
+        // Generate new data to add to the left
+        const newData = generateSineData(currentStep, 10);
+
+        // Update arrays
+        xData = newData.x.concat(xData.slice(0, totalPoints - 10));
+        yData = newData.y.concat(yData.slice(0, totalPoints - 10));
+
+        // Update the plot
+        Plotly.animate('plot', {
+            data: [{x: xData, y: yData}],
+            traces: [0],
+            layout: {}
+        }, {
+            transition: {
+                duration: 300,
+                easing: 'cubic-in-out'
+            }
+        });
+    }
+
+    // Add event listeners to buttons
+    document.getElementById('shift-left').addEventListener('click', shiftLeft);
+    document.getElementById('shift-right').addEventListener('click', shiftRight);
+</script>
+</body>
+</html>
