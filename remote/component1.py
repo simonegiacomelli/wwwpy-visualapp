@@ -1,3 +1,4 @@
+from __future__ import annotations
 import io
 import logging
 import time
@@ -6,12 +7,12 @@ import js
 import wwwpy.remote.component as wpc
 from wwwpy.remote import micropip_install
 from wwwpy.remote.jslib import script_load_once
+import pandas as pd
 
-from remote.time_series_component import TimeSeriesComponent # noqa
+from remote.time_series_component import TimeSeriesComponent  # noqa
 from server import rpc
 
 logger = logging.getLogger(__name__)
-
 
 
 class Component1(wpc.Component, tag_name='component-1'):
@@ -43,11 +44,8 @@ class Component1(wpc.Component, tag_name='component-1'):
 """
         self._inp_chunk.value = '0'
 
-
     async def after_init_component(self):
         await self._load_csv_options()
-        await micropip_install('pandas')
-        await micropip_install('fastparquet')
         logger.info('pandas and fastparquet installed')
 
     async def _load_csv_options(self):
@@ -72,9 +70,7 @@ class Component1(wpc.Component, tag_name='component-1'):
             df_bytes = await rpc.csv_get_chunk(csv_info.name, chunk_index)
             end_time = time.perf_counter_ns()
             load_timings = f'load_chunk: {(end_time - start_time) / 1_000_000:.2f} milliseconds'
-            import pandas as pd
-            import numpy as np
-            np.float_ = np.float64
+
             df = pd.read_parquet(io.BytesIO(df_bytes))
             logger.debug(f'df: {type(df)}')
             logger.debug(f'df: {df.head()}')
@@ -114,7 +110,7 @@ class Component1(wpc.Component, tag_name='component-1'):
         if i >= max_chunk:
             i = max_chunk - 1
 
-        self._inp_chunk.value = str(i )
+        self._inp_chunk.value = str(i)
 
     async def _select_csv__change(self, event):
         await self._load_chunk()
