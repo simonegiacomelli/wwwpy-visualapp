@@ -8,7 +8,7 @@ csv_dir = data_dir / 'csv'
 csv_cache_dir = data_dir / 'csv_cache'
 
 
-def write_csv_chunks(file_path, chunk_size=250):
+def write_csv_chunks(file_path, chunk_size=50):
     file_path = Path(file_path)
     cache_path = csv_cache_dir / file_path.name
     if cache_path.exists():
